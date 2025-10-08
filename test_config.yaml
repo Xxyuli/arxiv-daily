@@ -1,0 +1,17 @@
+ai_model:
+  analysis_prompt: 请简要分析这篇论文的核心内容。
+  deepseek:
+    api_key_env: sk-657423ad19b44a349bb62aff045260f3
+    base_url: https://api.deepseek.com
+    model: deepseek-chat
+  provider: deepseek
+arxiv:
+  categories:
+  - cs.AI
+  keywords:
+  - machine learning
+  max_papers_per_day: 2
+output:
+  date_format: '%Y-%m-%d'
+  filename_format: '{date}_test_papers.md'
+  output_dir: papers

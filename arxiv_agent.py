@@ -76,6 +76,26 @@ class ArxivAgent:
                 base_url=openai_config['base_url']
             )
             self.model_name = openai_config['model']
+        elif provider == "qwen":
+            qwen_config = self.config['ai_model']['qwen']
+            # Qwen (DashScope) 兼容 OpenAI API 协议
+            self.ai_client = openai.OpenAI(
+                api_key=os.getenv(qwen_config['api_key_env']),
+                base_url=qwen_config['base_url']
+            )
+            self.model_name = qwen_config['model']
+            self.provider_type = "openai"  # 因为兼容 OpenAI 协议
+
+        elif provider == "deepseek":
+            deepseek_config = self.config['ai_model']['deepseek']
+            # DeepSeek 官方 API 兼容 OpenAI 协议
+            print(os.getenv(deepseek_config['api_key_env']))
+            self.ai_client = openai.OpenAI(
+                api_key=os.getenv(deepseek_config['api_key_env']),
+                base_url=deepseek_config['base_url']
+            )
+            self.model_name = deepseek_config['model']
+            self.provider_type = "openai"
         else:
             raise ValueError(f"不支持的AI提供商: {provider}")
         

@@ -185,11 +185,11 @@ class DeploymentHelper:
                     'max_papers_per_day': 2
                 },
                 'ai_model': {
-                    'provider': 'openai',
-                    'openai': {
-                        'model': 'gpt-3.5-turbo',
-                        'api_key_env': 'OPENAI_API_KEY',
-                        'base_url': 'https://api.openai.com/v1'
+                    'provider': 'deepseek',
+                    'deepseek': {
+                        'model': 'deepseek-chat',
+                        'api_key_env': 'DEEPSEEK_API_KEY',
+                        'base_url': 'https://api.deepseek.com'
                     },
                     'analysis_prompt': '请简要分析这篇论文的核心内容。'
                 },
