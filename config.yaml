@@ -1,0 +1,64 @@
+# arXiv Agent 配置文件
+arxiv:
+  # 监控的arXiv分类，可以设置多个
+  categories:
+    - "cs.AI"      # 人工智能
+    - "cs.LG"      # 机器学习
+    - "cs.CV"      # 计算机视觉
+    - "cs.CL"      # 计算语言学
+  
+  # 关键词过滤
+  keywords:
+    - "large language model"
+    - "transformer"
+    - "neural network"
+    - "deep learning"
+    - "machine learning"
+    - "artificial intelligence"
+  
+  # 每日抓取论文数量限制
+  max_papers_per_day: 10
+
+# 大模型API配置
+ai_model:
+  # 支持的模型: openai, anthropic, custom
+  provider: "openai"
+  
+  # OpenAI配置
+  openai:
+    model: "gpt-3.5-turbo"
+    api_key_env: "OPENAI_API_KEY"
+    base_url: "https://api.openai.com/v1"
+  
+  # 分析提示词
+  analysis_prompt: |
+    请对以下arXiv论文进行详细分析，包括：
+    1. 论文的核心贡献和创新点
+    2. 技术方法的优缺点
+    3. 实验结果和性能分析
+    4. 对领域发展的意义
+    5. 潜在的应用场景
+    6. 改进建议和未来研究方向
+    
+    请用中文回答，语言要专业但易懂。
+
+# 输出配置
+output:
+  # 输出目录
+  output_dir: "papers"
+  
+  # 文件命名格式
+  filename_format: "{date}_papers.md"
+  
+  # 日期格式
+  date_format: "%Y-%m-%d"
+
+# GitHub配置
+github:
+  # 仓库信息
+  repo_owner: "your_username"
+  repo_name: "arxiv-paper-monitor"
+  
+  # 分支
+  branch: "main"
+

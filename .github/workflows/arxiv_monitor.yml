@@ -1,0 +1,117 @@
+name: arXiv论文监控Agent
+
+on:
+  schedule:
+    # 每天北京时间上午10点运行（UTC时间凌晨2点）
+    - cron: '0 2 * * *'
+  
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: '测试模式（不提交到仓库）'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+    
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: 安装依赖
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: 配置环境变量
+      run: |
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+        echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+    
+    - name: 运行arXiv监控Agent
+      run: |
+        python arxiv_agent.py
+    
+    - name: 检查是否有新文件
+      id: check_files
+      run: |
+        if [ -d "papers" ] && [ "$(ls -A papers)" ]; then
+          echo "has_files=true" >> $GITHUB_OUTPUT
+          echo "文件数量: $(ls papers | wc -l)"
+        else
+          echo "has_files=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: 配置Git
+      if: steps.check_files.outputs.has_files == 'true'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: 添加并提交文件
+      if: steps.check_files.outputs.has_files == 'true' && github.event.inputs.test_mode != 'true'
+      run: |
+        git add papers/
+        git commit -m "自动更新: $(date '+%Y-%m-%d') arXiv论文监控报告" || echo "没有新的更改"
+    
+    - name: 推送到仓库
+      if: steps.check_files.outputs.has_files == 'true' && github.event.inputs.test_mode != 'true'
+      run: |
+        git push origin main
+    
+    - name: 创建Issue（如果失败）
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const title = `arXiv监控Agent运行失败 - ${new Date().toLocaleDateString('zh-CN')}`;
+          const body = `
+          ## 运行失败报告
+          
+          **失败时间**: ${new Date().toISOString()}
+          **工作流**: ${{ github.workflow }}
+          **运行ID**: ${{ github.run_id }}
+          
+          ### 可能的原因
+          1. API密钥配置问题
+          2. 网络连接问题
+          3. 依赖包版本冲突
+          4. 代码逻辑错误
+          
+          ### 建议检查
+          - [ ] 检查GitHub Secrets中的API密钥
+          - [ ] 查看工作流运行日志
+          - [ ] 验证配置文件格式
+          
+          请检查日志并修复问题。
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'arxiv-agent']
+          });
+    
+    - name: 上传日志文件
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: logs-${{ github.run_id }}
+        path: |
+          arxiv_agent.log
+          papers/
+        retention-days: 7
