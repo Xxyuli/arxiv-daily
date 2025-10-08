@@ -4,8 +4,8 @@ arxiv:
   categories:
     - "cs.AI"      # 人工智能
     - "cs.LG"      # 机器学习
-    - "cs.RO"      # 计算机视觉
-    - "cs.CV"      # 计算语言学
+    - "cs.RO"      # 机器人
+    - "cs.CV"      # 计算机视觉
   
   # 关键词过滤
   keywords:
