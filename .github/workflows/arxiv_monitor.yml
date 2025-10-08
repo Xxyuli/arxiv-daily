@@ -70,7 +70,7 @@ jobs:
     - name: 推送到仓库
       if: steps.check_files.outputs.has_files == 'true' && github.event.inputs.test_mode != 'true'
       run: |
-        git push origin main
+        git push origin master
     
     - name: 创建Issue（如果失败）
       if: failure()
