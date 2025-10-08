@@ -22,12 +22,12 @@ arxiv:
 # 大模型API配置
 ai_model:
   # 支持的模型: openai, anthropic, custom
-  provider: "openai"
+  provider: "deepseek"
   
   # OpenAI配置
-  openai:
+  deepseek:
     model: "deepseek-chat"
-    api_key_env: "sk-657423ad19b44a349bb62aff045260f3"
+    api_key_env: "DEEPSEEK_API_KEY"
     base_url: "https://api.deepseek.com"
   
   # 分析提示词
