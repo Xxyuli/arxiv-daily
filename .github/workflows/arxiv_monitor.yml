@@ -24,6 +24,11 @@ jobs:
       with:
         token: ${{ secrets.GH_TOKEN }}
         fetch-depth: 0
+        
+    - name: 配置 Git 使用 Token 认证（关键修复）
+      run: |
+        git remote set-url origin https://${{ secrets.GH_TOKEN }}@github.com/Xxyuli/arxiv-daily.git
+
     
     - name: 设置Python环境
       uses: actions/setup-python@v4
