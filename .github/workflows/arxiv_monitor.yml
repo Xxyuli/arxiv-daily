@@ -17,6 +17,9 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
     
     steps:
     - name: 检出代码
@@ -24,11 +27,6 @@ jobs:
       with:
         token: ${{ secrets.GH_TOKEN }}
         fetch-depth: 0
-        
-    - name: 配置 Git 使用 Token 认证（关键修复）
-      run: |
-        git remote set-url origin https://${{ secrets.GH_TOKEN }}@github.com/Xxyuli/arxiv-daily.git
-
     
     - name: 设置Python环境
       uses: actions/setup-python@v4
@@ -43,7 +41,7 @@ jobs:
     
     - name: 配置环境变量
       run: |
-        echo "OPENAI_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
+        echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
         echo "GITHUB_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
     
     - name: 运行arXiv监控Agent
@@ -68,19 +66,26 @@ jobs:
     
     - name: 添加并提交文件
       if: steps.check_files.outputs.has_files == 'true' && github.event.inputs.test_mode != 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git add papers/
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+        git add papers/ figures/ 2>/dev/null || true
+        git add papers/ || true
         git commit -m "自动更新: $(date '+%Y-%m-%d') arXiv论文监控报告" || echo "没有新的更改"
     
     - name: 推送到仓库
       if: steps.check_files.outputs.has_files == 'true' && github.event.inputs.test_mode != 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git push origin master
+        git push origin HEAD:${{ github.ref_name }}
     
-    - name: 创建Issue（如果失败）
+    - name: 创建Issue(如果失败)
       if: failure()
       uses: actions/github-script@v6
       with:
+        github-token: ${{ secrets.GH_TOKEN }}
         script: |
           const title = `arXiv监控Agent运行失败 - ${new Date().toLocaleDateString('zh-CN')}`;
           const body = `
@@ -104,13 +109,17 @@ jobs:
           请检查日志并修复问题。
           `;
           
-          github.rest.issues.create({
-            owner: “Xxyuli”,
-            repo: “arxiv-daily”,
-            title: title,
-            body: body,
-            labels: ['bug', 'arxiv-agent']
-          });
+          try {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['bug', 'arxiv-agent']
+            });
+          } catch (error) {
+            console.log('创建Issue失败:', error.message);
+          }
     
     - name: 上传日志文件
       if: always()
@@ -120,4 +129,5 @@ jobs:
         path: |
           arxiv_agent.log
           papers/
+        if-no-files-found: ignore
         retention-days: 7

@@ -111,9 +111,15 @@ class ArxivAgent:
 
     def _download_pdf(self, arxiv_id: str) -> Optional[str]:
         """下载论文PDF"""
-        arxiv_id = match = re.search(r'arxiv\.org:(.+)', arxiv_id, re.IGNORECASE).group(1)
-        pdf_url = f"https://arxiv.org/pdf/{arxiv_id}.pdf"
-        pdf_path = os.path.join(self.pdf_dir, f"{arxiv_id}.pdf")
+        # 提取纯 arXiv ID（处理 oai:arXiv.org:xxxx.xxxxx 格式）
+        match = re.search(r'arxiv\.org:([^/\s]+)', arxiv_id, re.IGNORECASE)
+        if match:
+            arxiv_id = match.group(1)
+        # 如果已经是纯ID格式（如 2510.05180v1），直接使用
+        # 移除版本号后缀（如 v1, v2）用于下载PDF
+        clean_id = re.sub(r'v\d+$', '', arxiv_id)
+        pdf_url = f"https://arxiv.org/pdf/{clean_id}.pdf"
+        pdf_path = os.path.join(self.pdf_dir, f"{clean_id}.pdf")
         if os.path.exists(pdf_path):
             return pdf_path
         try:
